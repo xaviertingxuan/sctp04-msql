@@ -1,0 +1,28 @@
+{{#extends "base"}}
+  {{#block "content"}}
+    <h1>Customers</h1>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Company</th>
+          <th>Rating</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each customers}}
+          <tr>
+            <td>{{Customers.first_name}}</td>
+            <td>{{Customers.last_name}}</td>
+            <td>{{Companies.name}}</td>
+            <td>{{Customers.rating}}</td>
+            <td><a href="/customers/{{Customers.customer_id}}/edit">Edit</a></td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  {{/block}}
+{{/extends}}
+
