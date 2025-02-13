@@ -62,18 +62,27 @@ async function main() {
 
   app.get('/customers/create', async(req,res)=>{
     let [companies] = await connection.execute('SELECT * from Companies');
+    let [employees] = await connection.execute('SELECT * from Employees');
     res.render('customers/add', {
-        'companies': companies
+        'companies': companies,
+        'employees': employees
     })
-});
-
+})
 //add post route for create
 app.post('/customers/create', async(req,res)=>{
-    let {first_name, last_name, rating, company_id} = req.body;
-    let query = 'INSERT INTO Customers (first_name, last_name, rating, company_id) VALUES (?, ?, ?, ?)';
-    let bindings = [first_name, last_name, rating, company_id];
-    await connection.execute(query, bindings);
-    res.redirect('/customers');
+  let {first_name, last_name, rating, company_id, employee_id} = req.body;
+  let query = 'INSERT INTO Customers (first_name, last_name, rating, company_id) VALUES (?, ?, ?, ?)';
+  let bindings = [first_name, last_name, rating, company_id];
+  let [result] = await connection.execute(query, bindings);
+
+  let newCustomerId = result.insertId;
+  for (let id of employee_id) {
+      let query = 'INSERT INTO EmployeesCustomers (employee_id, customer_id) VALUES (?, ?)';
+      let bindings = [id, newCustomerId];
+      await connection.execute(query, bindings);
+  }
+
+  res.redirect('/customers');
 })
 
 //add get route for update
@@ -111,30 +120,6 @@ app.post('/customers/:customer_id/edit', async (req, res) => {
 });
 
 
-app.get('/customers/create', async(req,res)=>{
-    let [companies] = await connection.execute('SELECT * from Companies');
-    let [employees] = await connection.execute('SELECT * from Employees');
-    res.render('customers/add', {
-        'companies': companies,
-        'employees': employees
-    })
-})
-
-app.post('/customers/create', async(req,res)=>{
-    let {first_name, last_name, rating, company_id, employee_id} = req.body;
-    let query = 'INSERT INTO Customers (first_name, last_name, rating, company_id) VALUES (?, ?, ?, ?)';
-    let bindings = [first_name, last_name, rating, company_id];
-    let [result] = await connection.execute(query, bindings);
-
-    let newCustomerId = result.insertId;
-    for (let id of employee_id) {
-        let query = 'INSERT INTO EmployeesCustomers (employee_id, customer_id) VALUES (?, ?)';
-        let bindings = [id, newCustomerId];
-        await connection.execute(query, bindings);
-    }
-
-    res.redirect('/customers');
-})
 
 //add get route for delete
 app.get('/customers/:customer_id/delete', async function(req,res){
