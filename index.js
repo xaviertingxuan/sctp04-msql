@@ -61,13 +61,13 @@ async function main() {
   });
 
   app.get('/customers/create', async(req,res)=>{
-    let [companies] = await connection.execute('SELECT * from Companies');
-    let [employees] = await connection.execute('SELECT * from Employees');
+    const [companies] = await connection.execute('SELECT * from Companies');
+    const [employees] = await connection.execute('SELECT * from Employees');
     res.render('customers/add', {
         'companies': companies,
         'employees': employees
     })
-})
+
 //add post route for create
 app.post('/customers/create', async(req,res)=>{
   let {first_name, last_name, rating, company_id, employee_id} = req.body;
@@ -82,7 +82,26 @@ app.post('/customers/create', async(req,res)=>{
       await connection.execute(query, bindings);
   }
 
-  res.redirect('/customers');
+//   app.post('/customers/add', async function(req,res) {
+//     // to extract data from a form, we will
+//     // use the name of the field as a key in req.body
+//     const firstName = req.body.first_name;
+//     const lastName = req.body.last_name;
+//     const rating = req.body.rating;
+//     const companyId = req.body.company_id;
+
+//     const bindings = [firstName, lastName, rating, companyId]
+
+//     // use a prepared statement to insert rows -- a secured way to prevent MySQL injection attacks
+//     await connection.execute(`INSERT INTO Customers (first_name, last_name, rating, company_id)
+// VALUES (?, ?, ?, ? );`, bindings);
+
+// // tell the browser to go a different URL
+//     res.redirect("/customers");
+// })
+
+
+  res.send('form submitted');
 })
 
 //add get route for update
@@ -102,19 +121,19 @@ app.get('/customers/:customer_id/edit', async (req, res) => {
 });
 //add post route for update
 app.post('/customers/:customer_id/edit', async (req, res) => {
-    let {first_name, last_name, rating, company_id, employee_id} = req.body;
+    const {first_name, last_name, rating, company_id, employee_id} = req.body;
 
-    let query = 'UPDATE Customers SET first_name=?, last_name=?, rating=?, company_id=? WHERE customer_id=?';
-    let bindings = [first_name, last_name, rating, company_id, req.params.customer_id];
+    const query = 'UPDATE Customers SET first_name=?, last_name=?, rating=?, company_id=? WHERE customer_id=?';
+    const bindings = [first_name, last_name, rating, company_id, req.params.customer_id];
     await connection.execute(query, bindings);
 
-    await connection.execute('DELETE FROM EmployeeCustomer WHERE customer_id = ?', [req.params.customer_id]);
+    // await connection.execute('DELETE FROM EmployeeCustomer WHERE customer_id = ?', [req.params.customer_id]);
 
-    for (let id of employee_id) {
-        let query = 'INSERT INTO EmployeeCustomer (employee_id, customer_id) VALUES (?, ?)';
-        let bindings = [id, req.params.customer_id];
-        await connection.execute(query, bindings);
-    }
+    // for (let id of employee_id) {
+    //     let query = 'INSERT INTO EmployeeCustomer (employee_id, customer_id) VALUES (?, ?)';
+    //     let bindings = [id, req.params.customer_id];
+    //     await connection.execute(query, bindings);
+    // }
 
     res.redirect('/customers');
 });
@@ -141,10 +160,40 @@ app.post('/customers/:customer_id/delete', async function(req, res){
 })
 
 
+
+
+//add get route for employees
+app.get('/employees', async (req, res) => {
+    const [employees] = await connection.execute({
+      sql: `
+        SELECT * FROM Employees 
+        INNER JOIN Departments ON Employees.department_id = Departments.department_id
+      `,
+      nestTables: true
+    });
+
+    res.render('employees/index', {
+        employees
+    });
+  });
+
+
+  app.get('/employees/delete', async(req,res)=>{
+    const [employees] = await connection.execute('SELECT * from Employees');
+    res.render('employees/delete', {
+        'employees': employees
+    })
+  })
+})
+
+}
+main();
+
+
   app.listen(3000, () => {
     console.log('Server is running on http://localhost:3000');
   });
-}
+
 
 main().catch(err => {
   console.error('Error connecting to MySQL:', err);

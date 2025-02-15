@@ -45,3 +45,6 @@ insert into parents (first_name, last_name) values ("Ah Kow", "Tan");
 update parents set contact_number="123456789" WHERE parent_id=1;
 
 insert into students (name, swimming_level, dob, parent_id) values ('Desmond Tan', '1', '2010-09-10', 1);
+
+select * from Employees join
+Departments on Employees.department_id = Departments.department_id;
