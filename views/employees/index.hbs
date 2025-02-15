@@ -1,27 +1,37 @@
 {{#extends "base"}}
-  {{#block "content"}}
-    <h1>Employees</h1>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Employee ID</th>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>Department Name</th>
-          {{!-- <th>Action</th> --}}
-        </tr>
-      </thead>
-      <tbody>
-        {{#each employees}}
-          <tr>
-            <td>{{Employees.employee_id}}</td>
-            <td>{{Employees.first_name}}</td>
-            <td>{{Employees.last_name}}</td>
-            <td>{{Departments.name}}</td>
-            {{!-- <td><a href="/customers/{{Customers.customer_id}}/edit">Edit</a></td> --}}
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  {{/block}}
+
+{{#block "content"}}
+<h1>Employees</h1>
+
+<table class="table">
+<thead>
+    <tr>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Department ID</th>
+        <th></th>
+    </tr>
+</thead>
+<tbody>
+    {{#each employees}}
+    <tr>
+        <td>{{this.first_name}}</td>
+        <td>{{this.last_name}}</td>
+        <td>{{this.name}}</td>
+        <td>
+            <a href="/employees/{{this.employee_id}}/delete" class="btn btn-danger btn-sm">
+                Delete
+            </a>
+            <a href="/employees/{{this.employee_id}}/edit" class="btn btn-primary btn-sm">
+                Update
+            </a>
+        </td>
+        
+    </tr>
+    {{/each}}
+</tbody>
+</table>
+
+{{/block}}
+
 {{/extends}}

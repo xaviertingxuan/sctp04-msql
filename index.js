@@ -34,7 +34,7 @@ async function main() {
   console.log("Connected to MySQL");
 
   app.get('/', (req, res) => {
-    res.send('Hello, World!');
+    res.render('home');
   });
   
   // Test route for MySQL connection
@@ -48,146 +48,226 @@ async function main() {
   });
 
   app.get('/customers', async (req, res) => {
-    const [customers] = await connection.execute({
-      sql: `
-        SELECT * FROM Customers 
-        INNER JOIN Companies ON Customers.company_id = Companies.company_id
-      `,
-      nestTables: true
-    });
+    const [customers] = await connection.execute(
+      `SELECT * FROM Customers
+          JOIN Companies
+      ON Customers.company_id = Companies.company_id;`
+    );
+
     res.render('customers/index', {
       'customers': customers
     });
+
   });
 
-  app.get('/customers/create', async(req,res)=>{
-    const [companies] = await connection.execute('SELECT * from Companies');
-    const [employees] = await connection.execute('SELECT * from Employees');
-    res.render('customers/add', {
-        'companies': companies,
-        'employees': employees
-    })
+    app.get('/customers/create', async function (req, res) {
+        // const results = await connection.execute("SELECT * FROM Companies");
+        // const companies = results[0];
 
-//add post route for create
-app.post('/customers/create', async(req,res)=>{
-  let {first_name, last_name, rating, company_id, employee_id} = req.body;
-  let query = 'INSERT INTO Customers (first_name, last_name, rating, company_id) VALUES (?, ?, ?, ?)';
-  let bindings = [first_name, last_name, rating, company_id];
-  let [result] = await connection.execute(query, bindings);
+        const [companies] = await connection.execute("SELECT * FROM Companies");
 
-  let newCustomerId = result.insertId;
-  for (let id of employee_id) {
-      let query = 'INSERT INTO EmployeesCustomers (employee_id, customer_id) VALUES (?, ?)';
-      let bindings = [id, newCustomerId];
-      await connection.execute(query, bindings);
-  }
-
-//   app.post('/customers/add', async function(req,res) {
-//     // to extract data from a form, we will
-//     // use the name of the field as a key in req.body
-//     const firstName = req.body.first_name;
-//     const lastName = req.body.last_name;
-//     const rating = req.body.rating;
-//     const companyId = req.body.company_id;
-
-//     const bindings = [firstName, lastName, rating, companyId]
-
-//     // use a prepared statement to insert rows -- a secured way to prevent MySQL injection attacks
-//     await connection.execute(`INSERT INTO Customers (first_name, last_name, rating, company_id)
-// VALUES (?, ?, ?, ? );`, bindings);
-
-// // tell the browser to go a different URL
-//     res.redirect("/customers");
-// })
-
-
-  res.send('form submitted');
-})
-
-//add get route for update
-app.get('/customers/:customer_id/edit', async (req, res) => {
-    let [employees] = await connection.execute('SELECT * from Employees');
-    let [customers] = await connection.execute('SELECT * from Customers WHERE customer_id = ?', [req.params.customer_id]);
-    let [employeeCustomers] = await connection.execute('SELECT * from EmployeeCustomer WHERE customer_id = ?', [req.params.customer_id]);
-
-    let customer = customers[0];
-    let relatedEmployees = employeeCustomers.map(ec => ec.employee_id);
-
-    res.render('customers/edit', {
-        'customer': customer,
-        'employees': employees,
-        'relatedEmployees': relatedEmployees
-    })
-});
-//add post route for update
-app.post('/customers/:customer_id/edit', async (req, res) => {
-    const {first_name, last_name, rating, company_id, employee_id} = req.body;
-
-    const query = 'UPDATE Customers SET first_name=?, last_name=?, rating=?, company_id=? WHERE customer_id=?';
-    const bindings = [first_name, last_name, rating, company_id, req.params.customer_id];
-    await connection.execute(query, bindings);
-
-    // await connection.execute('DELETE FROM EmployeeCustomer WHERE customer_id = ?', [req.params.customer_id]);
-
-    // for (let id of employee_id) {
-    //     let query = 'INSERT INTO EmployeeCustomer (employee_id, customer_id) VALUES (?, ?)';
-    //     let bindings = [id, req.params.customer_id];
-    //     await connection.execute(query, bindings);
-    // }
-
-    res.redirect('/customers');
-});
-
-
-
-//add get route for delete
-app.get('/customers/:customer_id/delete', async function(req,res){
-    // display a confirmation form 
-    const [customers] = await connection.execute(
-        "SELECT * FROM Customers WHERE customer_id =?", [req.params.customer_id]
-    );
-    const customer = customers[0];
-
-    res.render('customers/delete', {
-        customer
-    })
-
-})
-//add post route for delete
-app.post('/customers/:customer_id/delete', async function(req, res){
-    await connection.execute(`DELETE FROM Customers WHERE customer_id = ?`, [req.params.customer_id]);
-    res.redirect('/customers');
-})
-
-
-
-
-//add get route for employees
-app.get('/employees', async (req, res) => {
-    const [employees] = await connection.execute({
-      sql: `
-        SELECT * FROM Employees 
-        INNER JOIN Departments ON Employees.department_id = Departments.department_id
-      `,
-      nestTables: true
+        res.render('customers/add', {
+            'companies': companies
+        });
     });
 
-    res.render('employees/index', {
-        employees
-    });
-  });
+    app.post('/customers/create', async function (req, res) {
 
+        const bindings = [req.body.firstName, req.body.lastName, req.body.rating, req.body.companyId]
 
-  app.get('/employees/delete', async(req,res)=>{
-    const [employees] = await connection.execute('SELECT * from Employees');
-    res.render('employees/delete', {
-        'employees': employees
+        const [customers] = await connection.execute(`INSERT INTO Customers (first_name, last_name, rating, company_id)
+  VALUES (?, ?, ?, ? );`, bindings);
+
+        res.redirect("/customers");
     })
+
+
+
+
+app.get('/customers/:customer_id/edit', async function (req, res) {
+  const bindings = [req.params.customer_id]
+
+  const [customer] = await connection.execute("SELECT * FROM Customers WHERE customer_id = ?", bindings);
+  const customerToUpdate = customer[0];
+
+  const [companies] = await connection.execute("SELECT * FROM Companies");
+
+  res.render('customers/edit', {
+      'customer': customerToUpdate,
+      companies
   })
 })
 
+app.post('/customers/:customer_id/edit', async function (req, res) {
+  const query = `
+    UPDATE Customers SET first_name = ?, last_name = ?, rating =?, company_id = ?,
+    WHERE customer_id = ?;
+  `
+  const bindings = [req.body.first_name, 
+                    req.body.last_name, 
+                    req.body.rating,
+                    req.body.company_id,
+                    req.params.customer_id
+                  ];
+
+  await connection.execute(query, bindings);
+  res.redirect("/customers");
+
+})
+
+
+
+
+//add customer delete route
+app.get('/customers/:employee_id/delete', async function (req, res) {
+  try {
+      const customerId = req.params.customer_id;
+      const results = await connection.execute(`
+          SELECT * FROM Employees WHERE employee_id = ?
+      `, [customerId])
+
+      const customers = results[0];
+
+      const customerToDelete = customers[0];
+
+      res.render('customers/delete', {
+          "customer": customerToDelete
+      })
+  } catch (e) {
+      res.send("Unable to process delete");
+  }
+
+});
+
+app.post('/customers/:customer_id/delete', async function (req, res) {
+  try {
+      const customerId = req.params.customer_id;
+      const query = `DELETE FROM Customers WHERE customer_id = ?`;
+      await connection.execute(query, [customerId]);
+      res.redirect('/customers');
+  } catch (e) {
+      console.log(e);
+      res.render("error", {
+          'errorMessage': 'Unable to process delete. Contact admin or try again'
+      })
+  }
+
+})
+
+
+
+
+   // app.get -- implies retriving information
+   app.get('/employees', async function (req, res) {
+    const results = await connection.execute(`SELECT * FROM Employees 
+          JOIN Departments
+          ON Employees.department_id = Departments.department_id;`);
+    // results will be an array of two elements
+    // but the rows of all employees is in the first element
+    const employees = results[0];
+    console.log(employees);
+    res.render('employees', {
+        "employees": employees,
+    });
+
+});
+
+// display the form to create a new employee
+app.get('/employees/create', async function (req, res) {
+    const results = await connection.execute("SELECT * FROM Departments");
+    const departments = results[0];
+
+    res.render('employees/add', {
+        "departments": departments
+    })
+})
+
+app.post('/employees/create', async function (req, res) {
+
+    const firstName = req.body.first_name;
+    const lastName = req.body.last_name;
+    const departmentId = req.body.department_id;
+
+    const sql = `INSERT INTO Employees (first_name, last_name, department_id)
+VALUES (?, ?, ?);
+    `
+    const bindings = [firstName, lastName, departmentId]
+
+    await connection.execute(sql, bindings);
+    res.redirect("/employees");
+})
+
+
+app.get('/employees/:employee_id/delete', async function (req, res) {
+    try {
+        const employeeId = req.params.employee_id;
+        const results = await connection.execute(`
+            SELECT * FROM Employees WHERE employee_id = ?
+        `, [employeeId])
+
+        const employees = results[0];
+
+        const employeeToDelete = employees[0];
+
+
+        res.render('employees/delete', {
+            "employee": employeeToDelete
+        })
+    } catch (e) {
+        res.send("Unable to process delete");
+    }
+
+});
+
+app.post('/employees/:employee_id/delete', async function (req, res) {
+    try {
+        const employeeId = req.params.employee_id;
+        const query = `DELETE FROM Employees WHERE employee_id = ?`;
+        await connection.execute(query, [employeeId]);
+        res.redirect('/employees');
+    } catch (e) {
+        console.log(e);
+        res.render("error", {
+            'errorMessage': 'Unable to process delete. Contact admin or try again'
+        })
+    }
+
+})
+
+app.get('/employees/:employee_id/edit', async function (req, res) {
+    const bindings = [req.params.employee_id]
+
+    const [employees] = await connection.execute("SELECT * FROM Employees WHERE employee_id = ?", bindings);
+    const employeeToUpdate = employees[0];
+
+    const [departments] = await connection.execute("SELECT * FROM Departments");
+
+    res.render('employees/edit', {
+        employee: employeeToUpdate,
+        departments: departments
+    })
+})
+
+app.post('/employees/:employee_id/edit', async function (req, res) {
+    const query = `
+      UPDATE Employees SET first_name = ?, last_name = ?, department_id = ?
+        WHERE employee_id = ?;
+    `
+    const bindings = [req.body.first_name, 
+                      req.body.last_name, 
+                      req.body.department_id,
+                      req.params.employee_id
+                    ];
+
+    await connection.execute(query, bindings);
+    res.redirect("/employees");
+
+})
+
+
 }
 main();
+
 
 
   app.listen(3000, () => {
@@ -198,3 +278,8 @@ main();
 main().catch(err => {
   console.error('Error connecting to MySQL:', err);
 });
+
+
+
+
+

@@ -48,3 +48,25 @@ insert into students (name, swimming_level, dob, parent_id) values ('Desmond Tan
 
 select * from Employees join
 Departments on Employees.department_id = Departments.department_id;
+
+UPDATE Customers SET first_name = James, last_name = Smith, rating = 4, company_id = 2
+WHERE customer_id = 6;
+
+
+
+const firstName = req.query.FirstName
+const lastName = req.query.LastName
+
+let sql = 
+select * from customers
+join companies
+on customers.company_id - companies.company_id
+
+const bindings = []
+
+if (firstName) {
+    sql +- ` where first name like ?;
+    bindings.push('%' + firstName + %)
+}
+
+const []

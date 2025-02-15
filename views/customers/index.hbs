@@ -1,4 +1,4 @@
-{{#extends "base"}}
+{{!-- {{#extends "base"}}
   {{#block "content"}}
     <h1>Customers</h1>
     <table class="table">
@@ -24,5 +24,41 @@
       </tbody>
     </table>
   {{/block}}
-{{/extends}}
+{{/extends}} --}}
 
+
+
+{{#extends "base"}}
+
+{{#block "content"}}
+<h1>Customers</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Rating</th>
+            <th>Company Name</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each customers}}
+        <tr>
+            <td>{{this.first_name}}</td>
+            <td>{{this.last_name}}</td>
+            <td>{{this.rating}}</td>
+            <td>{{this.name}}</td>
+            <td>
+              <a href="/customers/{{this.customer_id}}/delete" class="btn btn-danger btn-sm">Delete</a>
+              <a href="/customers/{{this.customer_id}}/edit" class="btn btn-primary btn-sm">Update</a>
+              </td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+
+{{/block}}
+
+{{/extends}}
