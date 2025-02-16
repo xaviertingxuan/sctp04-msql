@@ -57,15 +57,25 @@ async function main() {
   //Customers Routes
   app.get("/customers", async (req, res) => {
     try {
-      const [customers] = await connection.execute(
-        `SELECT * FROM Customers
-         JOIN Companies
-           ON Customers.company_id = Companies.company_id
-          WHERE is_deleted = FALSE;`
-      );
+      let sql = `
+          SELECT * FROM Customers
+          JOIN Companies
+          ON Customers.company_id = Companies.company_id
+          WHERE is_deleted = FALSE
+          `;
+      const bindings = [];
+
+      if (req.query.q && req.query.q.trim() !== "") {
+        sql += " AND (Customers.first_name LIKE ? OR Customers.last_name LIKE ? OR Customers.rating LIKE ? OR Companies.name LIKE ?)";
+        const searchTerm = "%" + req.query.q.trim() + "%";
+        bindings.push(searchTerm, searchTerm, searchTerm, searchTerm);
+      }
+
+      const [customers] = await connection.execute(sql, bindings);
 
       res.render("customers/index", {
         customers: customers,
+        query: req.query.q
       });
     } catch (err) {
       res.render("error", { errorMessage: "Unable to retrieve customers" });
@@ -176,13 +186,13 @@ async function main() {
       const query = `
         UPDATE Customers 
         SET 
-        first_name = 'Deleted User', 
-        last_name = 'Deleted User', 
-        rating = NULL,  
-        company_id = NULL, 
-        is_deleted = TRUE
+          first_name = 'Deleted User', 
+          last_name = 'Deleted User', 
+          rating = NULL,  
+          company_id = NULL, 
+          is_deleted = TRUE
         WHERE customer_id = ?;
-        `;
+      `;
       await connection.execute(query, [customerId]);
       res.redirect("/customers");
     } catch (e) {
@@ -196,14 +206,27 @@ async function main() {
   // Employees routes
   app.get("/employees", async function (req, res) {
     try {
-      const results = await connection.execute(
-        `SELECT * FROM Employees 
-         JOIN Departments
-           ON Employees.department_id = Departments.department_id;`
-      );
-      const employees = results[0];
-      console.log(employees);
-      res.render("employees", { employees: employees });
+        let sql = `
+        SELECT * FROM Employees 
+        JOIN Departments
+        ON Employees.department_id = Departments.department_id
+        WHERE 1
+      `;
+
+      const bindings = [];
+
+      if (req.query.q && req.query.q.trim() !== "") {
+        sql += " AND (Employees.first_name LIKE ? OR Employees.last_name LIKE ? OR Departments.name LIKE ?)";
+        const searchTerm = "%" + req.query.q.trim() + "%";
+        bindings.push(searchTerm, searchTerm, searchTerm);
+      }
+
+      const [employees] = await connection.execute(sql, bindings);
+
+      res.render("employees/index", {
+      employees: employees,
+      query: req.query.q
+    });
     } catch (err) {
       res.render("error", { errorMessage: "Unable to retrieve employees" });
     }
@@ -232,7 +255,7 @@ async function main() {
       const bindings = [firstName, lastName, departmentId];
 
       await connection.execute(sql, bindings);
-      res.redirect("/employees");
+      res.redirect("/employees/index");
     } catch (err) {
       res.render("error", { errorMessage: "Unable to create employee" });
     }
@@ -258,7 +281,7 @@ async function main() {
       const employeeId = req.params.employee_id;
       const query = `DELETE FROM Employees WHERE employee_id = ?`;
       await connection.execute(query, [employeeId]);
-      res.redirect("/employees");
+      res.redirect("/employee/index");
     } catch (e) {
       console.log(e);
       res.render("error", {
@@ -306,7 +329,7 @@ async function main() {
       ];
 
       await connection.execute(query, bindings);
-      res.redirect("/employees");
+      res.redirect("/employees/index");
     } catch (err) {
       res.render("error", { errorMessage: "Unable to update employee" });
     }
@@ -317,7 +340,7 @@ async function main() {
     try {
       const results = await connection.execute("SELECT * FROM Departments");
       const departments = results[0];
-      res.render("departments", { departments: departments });
+      res.render("departments/index", { departments: departments });
     } catch (err) {
       res.render("error", { errorMessage: "Unable to retrieve departments" });
     }
@@ -345,7 +368,7 @@ async function main() {
       const bindings = [departmentName];
 
       await connection.execute(sql, bindings);
-      res.redirect("/departments");
+      res.redirect("/departments/index");
     } catch (err) {
       res.render("error", { errorMessage: "Unable to create department" });
     }
@@ -371,7 +394,7 @@ async function main() {
       const departmentId = req.params.department_id;
       const query = `DELETE FROM Departments WHERE department_id = ?`;
       await connection.execute(query, [departmentId]);
-      res.redirect("/departments");
+      res.redirect("/departments/index");
     } catch (e) {
       console.log(e);
       res.render("error", {

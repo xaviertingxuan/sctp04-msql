@@ -3,6 +3,13 @@
 {{#block "content"}}
 <h1>Customers</h1>
 
+<form class="mb-3" method="GET" action="/customers">
+  <div class="input-group">
+    <input type="text" class="form-control" name="q" placeholder="Search customers..." value="{{query}}">
+    <button class="btn btn-outline-secondary" type="submit">Search</button>
+  </div>
+</form>
+
 <a href="/customers/create" class="btn btn-success mb-3">Add Customer</a>
 
 <table class="table">

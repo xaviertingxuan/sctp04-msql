@@ -2,6 +2,14 @@
 
 {{#block "content"}}
 <h1>Employees</h1>
+
+<form class="mb-3" method="GET" action="/employees">
+  <div class="input-group">
+    <input type="text" class="form-control" name="q" placeholder="Search employees..." value="{{query}}">
+    <button class="btn btn-outline-secondary" type="submit">Search</button>
+  </div>
+</form>
+
 <a href="/employees/create" class="btn btn-success mb-3">Add Employee</a>
 
 <table class="table">
@@ -9,7 +17,7 @@
     <tr>
         <th>First Name</th>
         <th>Last Name</th>
-        <th>Department ID</th>
+        <th>Department Name</th>
         <th></th>
     </tr>
 </thead>
@@ -27,7 +35,6 @@
                 Update
             </a>
         </td>
-        
     </tr>
     {{/each}}
 </tbody>
