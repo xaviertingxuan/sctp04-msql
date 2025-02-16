@@ -19,15 +19,21 @@ helpers({
   handlebars: hbs.handlebars,
 });
 
-let connection;
-
 async function main() {
-  // Connect to MySQL
-  connection = await createConnection({
+  //connect SQL
+  const connection = await createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
+  });
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("Database connection failed:", err);
+    } else {
+      console.log("Connected to MySQL");
+    }
   });
 
   app.get("/", (req, res) => {
@@ -38,7 +44,7 @@ async function main() {
     }
   });
 
-  // Test route for MySQL connection 
+  // Test route for MySQL connection
   app.get("/test-mysql", async (req, res) => {
     try {
       const [results] = await connection.execute("SELECT NOW() AS now");
@@ -54,9 +60,10 @@ async function main() {
       const [customers] = await connection.execute(
         `SELECT * FROM Customers
          JOIN Companies
-           ON Customers.company_id = Companies.company_id;`
+           ON Customers.company_id = Companies.company_id
+          WHERE is_deleted = FALSE;`
       );
-  
+
       res.render("customers/index", {
         customers: customers,
       });
@@ -72,7 +79,9 @@ async function main() {
         companies: companies,
       });
     } catch (err) {
-      res.render("error", { errorMessage: "Unable to load customer creation form" });
+      res.render("error", {
+        errorMessage: "Unable to load customer creation form",
+      });
     }
   });
 
@@ -84,13 +93,13 @@ async function main() {
         req.body.rating,
         req.body.company_id,
       ];
-  
+
       await connection.execute(
         `INSERT INTO Customers (first_name, last_name, rating, company_id)
          VALUES (?, ?, ?, ?);`,
         bindings
       );
-  
+
       res.redirect("/customers");
     } catch (err) {
       res.render("error", { errorMessage: "Unable to create customer" });
@@ -100,15 +109,15 @@ async function main() {
   app.get("/customers/:customer_id/edit", async function (req, res) {
     try {
       const bindings = [req.params.customer_id];
-  
+
       const [customer] = await connection.execute(
         "SELECT * FROM Customers WHERE customer_id = ?",
         bindings
       );
       const customerToUpdate = customer[0];
-  
+
       const [companies] = await connection.execute("SELECT * FROM Companies");
-  
+
       res.render("customers/edit", {
         customer: customerToUpdate,
         companies,
@@ -142,11 +151,12 @@ async function main() {
     }
   });
 
-  app.get("/customers/:employee_id/delete", async function (req, res) {
+  //delete customer using "soft delete"
+  app.get("/customers/:customer_id/delete", async function (req, res) {
     try {
       const customerId = req.params.customer_id;
       const results = await connection.execute(
-        `SELECT * FROM Employees WHERE employee_id = ?`,
+        `SELECT * FROM Customers WHERE customer_id = ?`,
         [customerId]
       );
       const customers = results[0];
@@ -159,10 +169,20 @@ async function main() {
     }
   });
 
+  //delete customer using "soft delete"
   app.post("/customers/:customer_id/delete", async function (req, res) {
     try {
       const customerId = req.params.customer_id;
-      const query = `DELETE FROM Customers WHERE customer_id = ?`;
+      const query = `
+        UPDATE Customers 
+        SET 
+        first_name = 'Deleted User', 
+        last_name = 'Deleted User', 
+        rating = NULL,  
+        company_id = NULL, 
+        is_deleted = TRUE
+        WHERE customer_id = ?;
+        `;
       await connection.execute(query, [customerId]);
       res.redirect("/customers");
     } catch (e) {
@@ -195,7 +215,9 @@ async function main() {
       const departments = results[0];
       res.render("employees/add", { departments: departments });
     } catch (err) {
-      res.render("error", { errorMessage: "Unable to load employee creation form" });
+      res.render("error", {
+        errorMessage: "Unable to load employee creation form",
+      });
     }
   });
 
@@ -204,11 +226,11 @@ async function main() {
       const firstName = req.body.first_name;
       const lastName = req.body.last_name;
       const departmentId = req.body.department_id;
-  
+
       const sql = `INSERT INTO Employees (first_name, last_name, department_id)
                    VALUES (?, ?, ?);`;
       const bindings = [firstName, lastName, departmentId];
-  
+
       await connection.execute(sql, bindings);
       res.redirect("/employees");
     } catch (err) {
@@ -248,21 +270,25 @@ async function main() {
   app.get("/employees/:employee_id/edit", async function (req, res) {
     try {
       const bindings = [req.params.employee_id];
-  
+
       const [employees] = await connection.execute(
         "SELECT * FROM Employees WHERE employee_id = ?",
         bindings
       );
       const employeeToUpdate = employees[0];
-  
-      const [departments] = await connection.execute("SELECT * FROM Departments");
-  
+
+      const [departments] = await connection.execute(
+        "SELECT * FROM Departments"
+      );
+
       res.render("employees/edit", {
         employee: employeeToUpdate,
         departments: departments,
       });
     } catch (err) {
-      res.render("error", { errorMessage: "Unable to load employee edit form" });
+      res.render("error", {
+        errorMessage: "Unable to load employee edit form",
+      });
     }
   });
 
@@ -278,7 +304,7 @@ async function main() {
         req.body.department_id,
         req.params.employee_id,
       ];
-  
+
       await connection.execute(query, bindings);
       res.redirect("/employees");
     } catch (err) {
@@ -286,7 +312,7 @@ async function main() {
     }
   });
 
-  // Departments routes 
+  // Departments routes
   app.get("/departments", async function (req, res) {
     try {
       const results = await connection.execute("SELECT * FROM Departments");
@@ -303,7 +329,9 @@ async function main() {
       const departments = results[0];
       res.render("departments/add", { departments: departments });
     } catch (err) {
-      res.render("error", { errorMessage: "Unable to load department creation form" });
+      res.render("error", {
+        errorMessage: "Unable to load department creation form",
+      });
     }
   });
 
@@ -315,7 +343,7 @@ async function main() {
         VALUES (?);
       `;
       const bindings = [departmentName];
-  
+
       await connection.execute(sql, bindings);
       res.redirect("/departments");
     } catch (err) {
