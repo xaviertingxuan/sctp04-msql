@@ -1,0 +1,30 @@
+{{#extends "base"}}
+
+{{#block "content"}}
+<h1>Departments</h1>
+<a href="departments/create" class="btn btn-success mb-3">Add Department</a>
+
+<table class="table">
+<thead>
+    <tr>
+        <th>Department Name</th>
+    </tr>
+</thead>
+<tbody>
+    {{#each departments}}
+    <tr>
+        <td>{{this.name}}</td>
+        <td>
+            <a href="/departments/{{this.department_id}}/delete" class="btn btn-danger btn-sm">
+                Delete
+            </a>
+        </td>
+        
+    </tr>
+    {{/each}}
+</tbody>
+</table>
+
+{{/block}}
+
+{{/extends}}

@@ -49,8 +49,8 @@ insert into students (name, swimming_level, dob, parent_id) values ('Desmond Tan
 select * from Employees join
 Departments on Employees.department_id = Departments.department_id;
 
-UPDATE Customers SET first_name = James, last_name = Smith, rating = 4, company_id = 2
-WHERE customer_id = 6;
+UPDATE Customers SET first_name = "James", last_name = "Smith", rating = "4", company_id = "2"
+WHERE customer_id = "6";
 
 
 

@@ -16,15 +16,15 @@
     </div>
 
     <div>
-        <label>Rating</label>
-        <input type="text" name="last_name" class="form-control" value="{{customer.rating}}"/>
+        <label>Rating (1-5)</label>
+        <input type="text" name="rating" class="form-control" value="{{customer.rating}}"/>
     </div>
 
  
 
     <div>
         <label>Company</label>
-        <select class="form-control" name="department_id">
+        <select class="form-control" name="company_id">
             {{#each companies}}
             <option value="{{this.company_id}}" 
             {{#eq this.company_id ../customer.company_id}}selected{{/eq}}>{{this.name}}</option>

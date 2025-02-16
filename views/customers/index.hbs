@@ -1,37 +1,9 @@
-{{!-- {{#extends "base"}}
-  {{#block "content"}}
-    <h1>Customers</h1>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>Company</th>
-          <th>Rating</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each customers}}
-          <tr>
-            <td>{{Customers.first_name}}</td>
-            <td>{{Customers.last_name}}</td>
-            <td>{{Companies.name}}</td>
-            <td>{{Customers.rating}}</td>
-            <td><a href="/customers/{{Customers.customer_id}}/edit">Edit</a></td>
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  {{/block}}
-{{/extends}} --}}
-
-
-
 {{#extends "base"}}
 
 {{#block "content"}}
 <h1>Customers</h1>
+
+<a href="/customers/create" class="btn btn-success mb-3">Add Customer</a>
 
 <table class="table">
     <thead>
@@ -53,7 +25,7 @@
             <td>
               <a href="/customers/{{this.customer_id}}/delete" class="btn btn-danger btn-sm">Delete</a>
               <a href="/customers/{{this.customer_id}}/edit" class="btn btn-primary btn-sm">Update</a>
-              </td>
+            </td>
         </tr>
         {{/each}}
     </tbody>
