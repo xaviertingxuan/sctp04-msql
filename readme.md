@@ -70,3 +70,5 @@ if (firstName) {
 }
 
 const []
+
+add date to the customers table

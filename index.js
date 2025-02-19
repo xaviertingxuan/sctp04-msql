@@ -255,7 +255,7 @@ async function main() {
       const bindings = [firstName, lastName, departmentId];
 
       await connection.execute(sql, bindings);
-      res.redirect("/employees/index");
+      res.redirect("/employees");
     } catch (err) {
       res.render("error", { errorMessage: "Unable to create employee" });
     }
@@ -281,7 +281,7 @@ async function main() {
       const employeeId = req.params.employee_id;
       const query = `DELETE FROM Employees WHERE employee_id = ?`;
       await connection.execute(query, [employeeId]);
-      res.redirect("/employee/index");
+      res.redirect("/employees");
     } catch (e) {
       console.log(e);
       res.render("error", {
@@ -329,7 +329,7 @@ async function main() {
       ];
 
       await connection.execute(query, bindings);
-      res.redirect("/employees/index");
+      res.redirect("/employees");
     } catch (err) {
       res.render("error", { errorMessage: "Unable to update employee" });
     }
@@ -368,7 +368,7 @@ async function main() {
       const bindings = [departmentName];
 
       await connection.execute(sql, bindings);
-      res.redirect("/departments/index");
+      res.redirect("/departments");
     } catch (err) {
       res.render("error", { errorMessage: "Unable to create department" });
     }
@@ -394,7 +394,7 @@ async function main() {
       const departmentId = req.params.department_id;
       const query = `DELETE FROM Departments WHERE department_id = ?`;
       await connection.execute(query, [departmentId]);
-      res.redirect("/departments/index");
+      res.redirect("/departments");
     } catch (e) {
       console.log(e);
       res.render("error", {
