@@ -66,9 +66,13 @@ async function main() {
       const bindings = [];
 
       if (req.query.q && req.query.q.trim() !== "") {
-        sql += " AND (Customers.first_name LIKE ? OR Customers.last_name LIKE ? OR Customers.rating LIKE ? OR Companies.name LIKE ?)";
-        const searchTerm = "%" + req.query.q.trim() + "%";
-        bindings.push(searchTerm, searchTerm, searchTerm, searchTerm);
+        const searchTerms = req.query.q.trim().split(/\s+/);
+  
+        searchTerms.forEach((term) => {
+          sql += " AND (Customers.first_name LIKE ? OR Customers.last_name LIKE ? OR Customers.rating LIKE ? OR Companies.name LIKE ?)";
+          const wildcardTerm = "%" + term + "%";
+          bindings.push(wildcardTerm, wildcardTerm, wildcardTerm, wildcardTerm);
+        });
       }
 
       const [customers] = await connection.execute(sql, bindings);
@@ -216,14 +220,18 @@ async function main() {
       const bindings = [];
 
       if (req.query.q && req.query.q.trim() !== "") {
-        sql += " AND (Employees.first_name LIKE ? OR Employees.last_name LIKE ? OR Departments.name LIKE ?)";
-        const searchTerm = "%" + req.query.q.trim() + "%";
-        bindings.push(searchTerm, searchTerm, searchTerm);
+        const searchTerms = req.query.q.trim().split(/\s+/);
+  
+        searchTerms.forEach((term) => {
+          sql += " AND (Employees.first_name LIKE ? OR Employees.last_name LIKE ? OR Departments.name LIKE ?)";
+          const wildcardTerm = "%" + term + "%";
+          bindings.push(wildcardTerm, wildcardTerm, wildcardTerm);
+        });
       }
 
       const [employees] = await connection.execute(sql, bindings);
 
-      res.render("employees/index", {
+      res.render("employees", {
       employees: employees,
       query: req.query.q
     });
